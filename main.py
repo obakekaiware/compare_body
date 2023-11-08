@@ -80,40 +80,25 @@ def add_text_to_image(image, text, position):
     return image
 
 
-def combine_cropped_images(image_path1, image_path2, margin):
-    # 画像1のバウンディングボックスを取得してクロップ
-    bbox1 = get_body_bounding_box(image_path1)
-    if bbox1:
-        cropped_img1 = crop_image_with_margin(image_path1, bbox1, margin)
-    else:
-        print(f"No pose detected in {image_path1}.")
-        return
-
-    # 画像2のバウンディングボックスを取得してクロップ
-    bbox2 = get_body_bounding_box(image_path2)
-    if bbox2:
-        cropped_img2 = crop_image_with_margin(image_path2, bbox2, margin)
-    else:
-        print(f"No pose detected in {image_path2}.")
-        return
-
+def resize_images(image1, image2):
     # クロップされた画像の高さが異なる場合はリサイズして一致させる
-    height1 = cropped_img1.shape[0]
-    height2 = cropped_img2.shape[0]
+    height1 = image1.shape[0]
+    height2 = image2.shape[0]
     if height1 != height2:
         # 新しい高さは二つの画像の中で小さい方に合わせる
         new_height = min(height1, height2)
-        cropped_img1 = cv2.resize(
-            cropped_img1,
-            (int(cropped_img1.shape[1] * new_height / height1), new_height),
+        image1 = cv2.resize(
+            image1, (int(image1.shape[1] * new_height / height1), new_height),
         )
-        cropped_img2 = cv2.resize(
-            cropped_img2,
-            (int(cropped_img2.shape[1] * new_height / height2), new_height),
+        image2 = cv2.resize(
+            image2, (int(image2.shape[1] * new_height / height2), new_height),
         )
+    return image1, image2
 
+
+def combine_images(image1, image2):
     # 画像を横に並べる
-    combined_img = np.hstack((cropped_img1, cropped_img2))
+    combined_img = np.hstack((image1, image2))
 
     return combined_img
 
@@ -143,13 +128,13 @@ def main():
         if bbox1 and bbox2:
             cropped_img1 = crop_image_with_margin(image1, bbox1, mergin)
             cropped_img2 = crop_image_with_margin(image2, bbox2, mergin)
+            cropped_img1, cropped_img2 = resize_images(cropped_img1, cropped_img2)
 
-            # 画像1に「過去」のテキストを追加
+            # 文字の追加
             cropped_img1 = add_text_to_image(cropped_img1, "KAKO", (30, 50))
-            # 画像2に「現在」のテキストを追加
             cropped_img2 = add_text_to_image(cropped_img2, "IMA", (30, 50))
 
-            combined_img = combine_cropped_images(cropped_img1, cropped_img2, mergin)
+            combined_img = combine_images(cropped_img1, cropped_img2)
 
             # Streamlitで画像を表示
             st.image(combined_img, use_column_width=True)
