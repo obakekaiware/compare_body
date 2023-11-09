@@ -105,7 +105,7 @@ def combine_images(image1, image2):
 
 def main():
     # Streamlitアプリのタイトル
-    st.title("過去の自分と体系比較")
+    st.title("過去の自分と体型比較")
 
     # 画像アップロード部分
     uploaded_file1 = st.file_uploader("過去の画像を選択", type=["jpg", "png", "jpeg"])
