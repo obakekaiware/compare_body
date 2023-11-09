@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 
-def get_body_bounding_box(image):
+def get_body_bounding_box(image: np.ndarray) -> list:
     # MediaPipeのPoseモデルを初期化
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5)
@@ -37,7 +37,7 @@ def get_body_bounding_box(image):
     return bbox
 
 
-def crop_image_with_margin(image, bbox, margin):
+def crop_image_with_margin(image: np.ndarray, bbox: list, margin: int) -> np.ndarray:
     # 画像の高さと幅を取得
     img_height, img_width, _ = image.shape
 
@@ -54,7 +54,23 @@ def crop_image_with_margin(image, bbox, margin):
     return cropped_image
 
 
-def add_text_to_image(image, text, position):
+def resize_images(image1: np.ndarray, image2: np.ndarray) -> list:
+    # クロップされた画像の高さが異なる場合はリサイズして一致させる
+    height1 = image1.shape[0]
+    height2 = image2.shape[0]
+    if height1 != height2:
+        # 新しい高さは二つの画像の中で小さい方に合わせる
+        new_height = min(height1, height2)
+        image1 = cv2.resize(
+            image1, (int(image1.shape[1] * new_height / height1), new_height),
+        )
+        image2 = cv2.resize(
+            image2, (int(image2.shape[1] * new_height / height2), new_height),
+        )
+    return image1, image2
+
+
+def add_text_to_image(image: np.ndarray, text: str, position: list) -> np.ndarray:
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
     font_color = (255, 255, 255)  # 白色
@@ -80,26 +96,9 @@ def add_text_to_image(image, text, position):
     return image
 
 
-def resize_images(image1, image2):
-    # クロップされた画像の高さが異なる場合はリサイズして一致させる
-    height1 = image1.shape[0]
-    height2 = image2.shape[0]
-    if height1 != height2:
-        # 新しい高さは二つの画像の中で小さい方に合わせる
-        new_height = min(height1, height2)
-        image1 = cv2.resize(
-            image1, (int(image1.shape[1] * new_height / height1), new_height),
-        )
-        image2 = cv2.resize(
-            image2, (int(image2.shape[1] * new_height / height2), new_height),
-        )
-    return image1, image2
-
-
-def combine_images(image1, image2):
+def combine_images(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     # 画像を横に並べる
     combined_img = np.hstack((image1, image2))
-
     return combined_img
 
 
